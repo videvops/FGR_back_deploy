@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
@@ -51,12 +51,13 @@ namespace Detenidos.Controllers
 			IConfiguration configuration, 
 			ApplicationDbContext context, 
 			RoleManager<ApplicationRole> roleManager, 
-			IMapper mapper, 
+			IMapper mapper,
 			IFileStorage fileStore, 
 			ITokenManager tokenManager,
 			//JwtHandler jwtHandler,
 			IOptions<JwtOptions> jwtOptions,
 			IHttpContextAccessor httpContextAccessor)
+         
 		{
 			_userManager = userManager;
 			_signInManager = signInManager;
@@ -148,6 +149,7 @@ namespace Detenidos.Controllers
         }
       
         [HttpPost("register")]
+        [AllowAnonymous] // <- Remover al final 
         //[Authorize(Roles = "Administrador")]
         public async Task<ActionResult> Post([FromBody] CreateUserDTO _createUserDTO)
         {
@@ -162,7 +164,7 @@ namespace Detenidos.Controllers
             datosRegistro.Sistema =sistema;
 
             var _user = _mapper.Map<ApplicationUser>(_createUserDTO);
-            _user.UserId = new Utilerias(_configuration).GetSequence("Users");           
+            _user.UserId =  new Utilerias(_configuration).GetSequence("Users");   // <- Fallando    // <- Hardcodear valor para crear usuario       
             _user.FechaAlta = new Utilerias(_configuration).GetFechaServidor();
             _user.PersonalID = _createUserDTO.PersonalID;
             var _result = await _userManager.CreateAsync(_user, "123456");
@@ -265,6 +267,7 @@ namespace Detenidos.Controllers
                 new Claim("CatFiscaliaID", _user.CatFiscaliaID.ToString()),
                 new Claim("UserName", _user.UserName),
                 new Claim("friendlyname", _user.FriendlyName),
+                new Claim(ClaimTypes.Role, "Administrador")
                 //new Claim("fiscalia", fiscalia)
             };
 
